@@ -1,14 +1,12 @@
-const CALLBACK_TYPES = Object.freeze({
+const LISTENER_TYPES = Object.freeze({
   ON: 'ON',
   ONCE: 'ONCE',
 });
 
-const INITIAL_STATE = {};
-
-module.exports = class {
+class EventEmitter {
   constructor() {
-    this.events = INITIAL_STATE;
-    this.isWithOnceCallbacks = false;
+    this._events = {};
+    this._isWithOnceCallbacks = false;
   }
 
   addListener(eventName, listener) {
@@ -16,13 +14,13 @@ module.exports = class {
   }
 
   emit(eventName, ...args) {
-    if (eventName in this.events) {
-      this.events[eventName].forEach(({ listener }) => listener(...args));
+    if (eventName in this._events) {
+      this._events[eventName].forEach(({ listener }) => listener(...args));
 
-      if (this.isWithOnceCallbacks === true) {
-        this.isWithOnceCallbacks = false;
-        this.events[eventName] = this.events[eventName].filter(
-          ({ type }) => type !== CALLBACK_TYPES.ONCE
+      if (this._isWithOnceCallbacks === true) {
+        this._isWithOnceCallbacks = false;
+        this._events[eventName] = this._events[eventName].filter(
+          ({ type }) => type !== LISTENER_TYPES.ONCE
         );
       }
       return true;
@@ -32,16 +30,16 @@ module.exports = class {
   }
 
   eventNames() {
-    return Object.keys(this.events);
+    return Object.keys(this._events);
   }
 
   listenerCount(eventName) {
-    return this.events[eventName] ? this.events[eventName].length : -1;
+    return this._events[eventName] ? this._events[eventName].length : -1;
   }
 
   listeners(eventName) {
-    return this.events[eventName]
-      ? this.events[eventName].map(({ listener }) => listener)
+    return this._events[eventName]
+      ? this._events[eventName].map(({ listener }) => listener)
       : -1;
   }
 
@@ -50,48 +48,58 @@ module.exports = class {
   }
 
   on(eventName, listener) {
-    if (!(eventName in this.events)) {
-      this.events[eventName] = [];
+    if (!(eventName in this._events)) {
+      this._events[eventName] = [];
     }
 
-    this.events[eventName].push({ listener, type: CALLBACK_TYPES.ON });
+    this._addListener(eventName, listener, LISTENER_TYPES.ON);
 
     return this;
   }
 
   once(eventName, listener) {
-    if (!(eventName in this.events)) {
-      this.events[eventName] = [];
+    if (!(eventName in this._events)) {
+      this._events[eventName] = [];
     }
 
-    if (!this.isWithOnceCallbacks) {
-      this.isWithOnceCallbacks = true;
+    if (!this._isWithOnceCallbacks) {
+      this._isWithOnceCallbacks = true;
     }
 
-    this.events[eventName].push({ listener, type: CALLBACK_TYPES.ONCE });
+    this._addListener(eventName, listener, LISTENER_TYPES.ONCE);
 
     return this;
   }
 
   removeAllListeners(eventName = '') {
     if (eventName) {
-      this.events[eventName] = undefined;
+      this._resetListenersForEvent(eventName);
     } else {
-      this.events = INITIAL_STATE;
+      this._events = {};
     }
 
     return this;
   }
 
   removeListener(eventName, eventListener) {
-    this.events[eventName] = this.events[eventName].filter(
+    this._events[eventName] = this._events[eventName].filter(
       ({ listener }) => listener !== eventListener
     );
 
-    if (this.events[eventName].length === 0) {
-      this.events[eventName] = undefined;
+    if (this._events[eventName].length === 0) {
+      this._resetListenersForEvent(eventName);
     }
 
     return this;
   }
-};
+
+  _addListener(eventName, listener, listenerType) {
+    this._events[eventName].push({ listener, type: listenerType });
+  }
+
+  _resetListenersForEvent(eventName) {
+    this._events[eventName] = undefined;
+  }
+}
+
+module.exports = EventEmitter;

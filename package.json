@@ -1,0 +1,14 @@
+{
+  "name": "EventEmitter",
+  "description": "Implementation of basic functionality of the EventEmitter from Node.js",
+  "engines": {
+    "node": "12.13.0"
+  },
+  "scripts": {
+    "test": "jest --watch",
+    "test:debug": "node --inspect-brk ./node_modules/jest/bin/jest --runInBand --watch"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1"
+  }
+}
