@@ -14,7 +14,7 @@ class EventEmitter {
   }
 
   emit(eventName, ...args) {
-    if (eventName in this._events) {
+    if (this._events[eventName]) {
       this._events[eventName].forEach(({ listener }) => listener(...args));
 
       if (this._isWithOnceCallbacks === true) {
@@ -48,9 +48,7 @@ class EventEmitter {
   }
 
   on(eventName, listener) {
-    if (!(eventName in this._events)) {
-      this._events[eventName] = [];
-    }
+    this._initializeEvent(this._events, eventName);
 
     this._addListener(eventName, listener, LISTENER_TYPES.ON);
 
@@ -58,9 +56,7 @@ class EventEmitter {
   }
 
   once(eventName, listener) {
-    if (!(eventName in this._events)) {
-      this._events[eventName] = [];
-    }
+    this._initializeEvent(this._events, eventName);
 
     if (!this._isWithOnceCallbacks) {
       this._isWithOnceCallbacks = true;
@@ -95,6 +91,12 @@ class EventEmitter {
 
   _addListener(eventName, listener, listenerType) {
     this._events[eventName].push({ listener, type: listenerType });
+  }
+
+  _initializeEvent(events, eventName) {
+    if (!events[eventName]) {
+      events[eventName] = [];
+    }
   }
 
   _resetListenersForEvent(eventName) {
